@@ -3,7 +3,7 @@ import moodle_docs_theme
 project = "moodle-tool_participantscustomfilter"
 copyright = "2026, Kelson da Costa Medeiros"
 author = "Kelson da Costa Medeiros"
-release = "1.0.3"
+release = "1.1.0"
 
 extensions = [
     "sphinx.ext.githubpages",

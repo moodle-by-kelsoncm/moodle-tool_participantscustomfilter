@@ -15,34 +15,25 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * English language strings for tool_participantscustomfilter.
+ * English strings of tool_participantscustomfilter.
  *
  * @package    tool_participantscustomfilter
- * @copyright  2026 KelsonCM
+ * @copyright  2026 onwards Kelson da Costa Medeiros
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-// Plugin name shown in the admin interface.
-$string['pluginname'] = 'Participants custom field filter';
-
-// Filter form strings.
+$string['clearfilter'] = 'Clear filter';
+$string['filter'] = 'Filter';
 $string['filterbyprofilefield'] = 'Filter by profile field';
-$string['profilefield']         = 'Profile field';
-$string['selectfield']          = '— Select a field —';
-$string['value']                = 'Value';
-$string['filtervalue']          = 'Type a value…';
-$string['filter']               = 'Filter';
-$string['clearfilter']          = 'Clear filter';
-
-// Results area strings.
-$string['filteredresults'] = 'Filtered participants';
-$string['noresults']       = 'No participants found matching the selected criteria.';
-
-// Error / info strings.
-$string['nocustomfields'] = 'No custom profile fields have been configured for this site.';
-$string['invalidfield']   = 'The selected profile field does not exist. Please choose a valid field.';
-
-// Privacy / capability strings (no personal data is stored by this plugin).
+$string['filteredresults'] = 'Participants found: {$a}';
+$string['filtervalue'] = 'Type a value';
+$string['invalidfield'] = 'The selected profile field does not exist or you cannot filter by it.';
+$string['nocustomfields'] = 'There are no custom profile fields you can filter by.';
+$string['noresults'] = 'No participants match the selected field and value.';
+$string['pluginname'] = 'Participants custom field filter';
 $string['privacy:metadata'] = 'The Participants custom field filter plugin does not store any personal data.';
+$string['profilefield'] = 'Profile field';
+$string['selectfield'] = 'Select a field';
+$string['value'] = 'Value';

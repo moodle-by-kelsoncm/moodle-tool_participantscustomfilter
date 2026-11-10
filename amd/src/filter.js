@@ -14,148 +14,34 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * AMD module for tool_participantscustomfilter.
+ * Moves the custom profile field filter above the participants table.
  *
- * Injects the server-rendered filter form (and, when a filter is active,
- * the filtered results panel) into the participants page DOM without any
- * additional AJAX round-trip.
+ * The panel is printed by the server at the end of the main region; without
+ * JavaScript it stays there and still works.
  *
  * @module     tool_participantscustomfilter/filter
- * @copyright  2026 KelsonCM
+ * @copyright  2026 onwards Kelson da Costa Medeiros
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-/**
- * Ordered list of CSS selectors used to locate the participants table
- * wrapper in the DOM.  We try several selectors to be compatible with
- * different Moodle 4.x theme / page layouts.
- *
- * @type {string[]}
- */
-const PARTICIPANTS_TABLE_SELECTORS = [
-    '[data-region="participants-table"]',
-    '[data-region="participants"]',
-    '.participants-overview-table',
-    '#participants-table',
-    '.userenrolments',
-    '#region-main .flexible',   // table_sql default class
-    '#region-main table',       // generic fallback
-];
+const PANEL = '[data-region="tool-participantscustomfilter"]';
 
 /**
- * Ordered list of CSS selectors used to locate the filter form container.
- *
- * @type {string[]}
+ * Places the panel right after the core participants filter, or before the list.
  */
-const FILTER_FORM_SELECTORS = [
-    '.core-filter-row',
-    '[data-region="filters"]',
-    '.mform',
-    '#region-main form',
-];
-
-/**
- * Find the first element in the DOM that matches any of the given selectors.
- *
- * @param  {string[]} selectors
- * @return {Element|null}
- */
-const findFirst = (selectors) => {
-    for (const sel of selectors) {
-        const el = document.querySelector(sel);
-        if (el) {
-            return el;
-        }
+export const init = () => {
+    const panel = document.querySelector(PANEL);
+    if (!panel || panel.dataset.moved) {
+        return;
     }
-    return null;
-};
-
-/**
- * Parse an HTML string and return the first root element.
- *
- * @param  {string} html
- * @return {Element}
- */
-const parseHTML = (html) => {
-    const tpl = document.createElement('template');
-    tpl.innerHTML = html.trim();
-    return tpl.content.firstElementChild;
-};
-
-/**
- * Initialise the filter.
- *
- * Called by $PAGE->requires->js_call_amd() with the data object built in
- * tool_participantscustomfilter_before_standard_html_head().
- *
- * @param {Object}  config
- * @param {string}  config.formhtml    Server-rendered filter form HTML.
- * @param {string}  config.resultshtml Server-rendered filtered results HTML
- *                                     (empty string when filter is not active).
- * @param {boolean} config.isfiltered  Whether a filter is currently active.
- */
-export const init = (config) => {
-    console.log('tool_participantscustomfilter init called', config);
-    const { formhtml, resultshtml, isfiltered } = config;
-
-    const inject = () => {
-        console.log('tool_participantscustomfilter inject running');
-        // ----------------------------------------------------------------
-        // Locate the target element that will be our insertion anchor.
-        // Prefer to insert before the existing filter form, fallback to table.
-        // ----------------------------------------------------------------
-        let anchor = findFirst(FILTER_FORM_SELECTORS);
-        console.log('anchor from FILTER_FORM_SELECTORS:', anchor);
-        if (!anchor) {
-            anchor = findFirst(PARTICIPANTS_TABLE_SELECTORS);
-            console.log('anchor from PARTICIPANTS_TABLE_SELECTORS:', anchor);
-        }
-        if (!anchor) {
-            console.log('No anchor found');
-            // No suitable anchor found.
-            return;
-        }
-
-        const parent = anchor.parentNode;
-        console.log('parent:', parent);
-
-        // ----------------------------------------------------------------
-        // Inject filter form immediately before the participants table.
-        // ----------------------------------------------------------------
-        if (formhtml) {
-            // Avoid injecting twice (e.g. if init() is called more than once).
-            if (!document.getElementById('tool-participantscustomfilter-wrap')) {
-                const formEl = parseHTML(formhtml);
-                if (formEl) {
-                    parent.insertBefore(formEl, anchor);
-                }
-            }
-        }
-
-        // ----------------------------------------------------------------
-        // When a filter is active, inject the results panel right after
-        // the filter form (still before the standard participants table
-        // so users clearly see what the filtered view contains).
-        // ----------------------------------------------------------------
-        if (isfiltered && resultshtml) {
-            if (!document.getElementById('tool-participantscustomfilter-results')) {
-                const resultsEl = parseHTML(resultshtml);
-                if (resultsEl) {
-                    // Insert after the form wrapper (or before the table if
-                    // the form was not injected).
-                    const formWrap = document.getElementById('tool-participantscustomfilter-wrap');
-                    const insertBefore = formWrap ? formWrap.nextSibling : anchor;
-                    parent.insertBefore(resultsEl, insertBefore);
-                }
-            }
-        }
-    };
-
-    // Run as soon as the DOM is interactive (handles both early and late calls).
-    console.log("document.readyState", document.readyState);
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', inject);
+    const corefilter = document.querySelector('#region-main [id^="core-filter-"]');
+    const userlist = document.querySelector('#region-main .userlist');
+    if (corefilter) {
+        corefilter.after(panel);
+    } else if (userlist) {
+        userlist.before(panel);
     } else {
-        inject();
+        return;
     }
+    panel.dataset.moved = '1';
 };
