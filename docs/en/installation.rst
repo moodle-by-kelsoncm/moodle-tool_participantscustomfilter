@@ -9,7 +9,7 @@ Step by Step
    .. code-block:: bash
 
       cd /path/to/moodle/admin/tool
-      git clone https://github.com/moodle-by-kelsoncm/tool_participantscustomfilter.git participantscustomfilter
+      git clone https://github.com/moodle-by-kelsoncm/moodle-tool_participantscustomfilter.git participantscustomfilter
 
 2. Run the upgrade script via the command line:
 
