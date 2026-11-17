@@ -3,7 +3,7 @@ import moodle_docs_theme
 project = "moodle-tool_participantscustomfilter"
 copyright = "2026, Kelson da Costa Medeiros"
 author = "Kelson da Costa Medeiros"
-release = "1.0.3"
+release = "1.1.0"
 
 extensions = [
     "sphinx.ext.githubpages",
@@ -24,7 +24,7 @@ html_theme_options = {
     "github_url": "https://github.com/moodle-by-kelsoncm/moodle-tool_participantscustomfilter",
     "github_repo": "moodle-by-kelsoncm/moodle-tool_participantscustomfilter",
     "github_version": "main",
-    "doc_path": "docs/pt-br/",
+    "doc_path": "docs/pt_BR/",
     "show_edit_on_github": True,
     "enable_dark_mode": True,
     "enable_language_selector": True,

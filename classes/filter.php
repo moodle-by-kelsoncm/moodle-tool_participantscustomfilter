@@ -14,26 +14,28 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
-/**
- * Filter manager for tool_participantscustomfilter.
- *
- * @package    tool_participantscustomfilter
- * @copyright  2026 KelsonCM
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace tool_participantscustomfilter;
 
-defined('MOODLE_INTERNAL') || die();
+use context_course;
+use context_system;
+use core_user\fields;
 
 /**
- * Manages retrieval and application of custom profile field filters on the
- * participants page.
+ * Finds the course participants whose custom profile field matches a value.
+ *
+ * @package    tool_participantscustomfilter
+ * @copyright  2026 onwards Kelson da Costa Medeiros
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class filter {
+    /** @var int Default number of participants per page. */
+    public const PERPAGE = 20;
 
     /** @var int Course id. */
     protected int $courseid;
+
+    /** @var context_course Course context. */
+    protected context_course $context;
 
     /**
      * Constructor.
@@ -41,115 +43,145 @@ class filter {
      * @param int $courseid Course id.
      */
     public function __construct(int $courseid) {
+        global $CFG;
+        require_once($CFG->dirroot . '/user/profile/lib.php');
         $this->courseid = $courseid;
+        $this->context = context_course::instance($courseid);
     }
 
     /**
-     * Return all user profile custom fields available in the system.
+     * Returns the custom profile fields the current user may filter by in this course.
      *
-     * @return array  Array of ['shortname' => string, 'name' => string].
+     * The rules follow {@see \profile_field_base::is_visible()} for other users' data:
+     * fields visible to everyone, fields visible to teachers when the user can see
+     * the identity of course participants, and private or hidden fields only with
+     * moodle/user:viewalldetails at system level.
+     *
+     * @return array List of ['shortname' => string, 'name' => string], sorted by name.
      */
     public function get_custom_fields(): array {
         global $DB;
 
-        $records = $DB->get_records('user_info_field', [], 'name ASC', 'id, shortname, name');
-        $fields  = [];
+        $records = $DB->get_records('user_info_field', null, 'sortorder ASC, id ASC', 'id, shortname, name, visible');
+        $fields = [];
         foreach ($records as $record) {
+            if (!$this->can_filter_by($record->visible)) {
+                continue;
+            }
             $fields[] = [
                 'shortname' => $record->shortname,
-                'name'      => format_string($record->name),
+                'name' => format_string($record->name, true, ['context' => context_system::instance()]),
             ];
         }
         return $fields;
     }
 
     /**
-     * Check whether a given shortname corresponds to an existing profile field.
+     * Whether the current user may filter by a field with the given visibility.
      *
-     * @param  string $shortname
+     * @param int $visible Value of user_info_field.visible.
      * @return bool
      */
-    public function is_valid_field(string $shortname): bool {
-        global $DB;
-        return $DB->record_exists('user_info_field', ['shortname' => $shortname]);
+    protected function can_filter_by(int $visible): bool {
+        switch ($visible) {
+            case PROFILE_VISIBLE_ALL:
+                return true;
+            case PROFILE_VISIBLE_TEACHERS:
+                return has_capability('moodle/site:viewuseridentity', $this->context);
+            default:
+                return has_capability('moodle/user:viewalldetails', context_system::instance());
+        }
     }
 
     /**
-     * Return participants of the course whose custom profile field value matches
-     * (partial, case-insensitive) the given string.
+     * Whether the shortname is a profile field the current user may filter by.
      *
-     * @param  string $fieldshortname  Shortname of the profile field to filter by.
-     * @param  string $filtervalue     Value to search for (substring match).
-     * @param  int    $page            0-based page number for pagination.
-     * @param  int    $perpage         Results per page.
-     * @return array  ['total' => int, 'users' => \stdClass[]]
+     * @param string $shortname Field shortname.
+     * @return bool
+     */
+    public function is_valid_field(string $shortname): bool {
+        foreach ($this->get_custom_fields() as $field) {
+            if ($field['shortname'] === $shortname) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns the participants with an active enrolment whose field value contains the given text.
+     *
+     * The match is case-insensitive and partial. Only active enrolments on enabled
+     * enrolment methods count, and deleted users are left out.
+     *
+     * @param string $fieldshortname Shortname of the profile field.
+     * @param string $filtervalue Text to look for.
+     * @param int $page Page number, starting at 0.
+     * @param int $perpage Participants per page.
+     * @param int[]|null $groupids Restrict to members of these groups (null: no restriction).
+     * @return array ['total' => int, 'users' => \stdClass[], 'identityfields' => string[]]
      */
     public function get_filtered_participants(
         string $fieldshortname,
         string $filtervalue,
-        int $page    = 0,
-        int $perpage = 20
+        int $page = 0,
+        int $perpage = self::PERPAGE,
+        ?array $groupids = null
     ): array {
         global $DB;
 
-        if (!$this->is_valid_field($fieldshortname)) {
-            return ['total' => 0, 'users' => []];
+        $identityfields = fields::get_identity_fields($this->context, false);
+        $empty = ['total' => 0, 'users' => [], 'identityfields' => $identityfields];
+        if ($filtervalue === '' || !$this->is_valid_field($fieldshortname)) {
+            return $empty;
+        }
+        if ($groupids !== null && empty($groupids)) {
+            return $empty;
         }
 
-        $likevalue = '%' . $DB->sql_like_escape($filtervalue) . '%';
-
-        // ENROL_INSTANCE_ENABLED = 0, ENROL_USER_ACTIVE = 0.
-        // Only count/return participants with an active enrolment on an enabled
-        // enrolment instance, consistent with Moodle's own participants listing.
-
-        // Build a direct COUNT query so we do not need a wrapping sub-select.
-        $countsql = "SELECT COUNT(DISTINCT u.id)
-                       FROM {user}              u
-                       JOIN {user_enrolments}   ue  ON ue.userid    = u.id
-                                                    AND ue.status    = :activeue
-                       JOIN {enrol}             e   ON e.id         = ue.enrolid
-                                                    AND e.courseid   = :courseid_sub
-                                                    AND e.status     = :activee
-                       JOIN {user_info_field}   uif ON uif.shortname = :fieldshortname
-                       JOIN {user_info_data}    uid ON uid.fieldid   = uif.id
-                                                    AND uid.userid    = u.id
-                      WHERE u.deleted = 0
-                        AND " . $DB->sql_like('uid.data', ':filtervalue_sub', false);
-
-        $baseparams = [
-            'courseid_sub'    => $this->courseid,
-            'fieldshortname'  => $fieldshortname,
-            'filtervalue_sub' => $likevalue,
-            'activeue'        => 0, // ENROL_USER_ACTIVE
-            'activee'         => 0, // ENROL_INSTANCE_ENABLED
+        $groupjoin = '';
+        $params = [
+            'courseid' => $this->courseid,
+            'shortname' => $fieldshortname,
+            'value' => '%' . $DB->sql_like_escape($filtervalue) . '%',
+            'activeue' => ENROL_USER_ACTIVE,
+            'activee' => ENROL_INSTANCE_ENABLED,
+            'now1' => time(),
+            'now2' => time(),
         ];
-
-        $total = (int) $DB->count_records_sql($countsql, $baseparams);
-
-        if ($total === 0) {
-            return ['total' => 0, 'users' => []];
+        if ($groupids !== null) {
+            [$ingroups, $groupparams] = $DB->get_in_or_equal($groupids, SQL_PARAMS_NAMED, 'grp');
+            $groupjoin = "JOIN {groups_members} gm ON gm.userid = u.id AND gm.groupid $ingroups";
+            $params += $groupparams;
         }
 
-        $selectsql = "SELECT DISTINCT u.id, u.firstname, u.lastname, u.email, u.username,
-                             u.picture, u.imagealt, u.firstnamephonetic, u.lastnamephonetic,
-                             u.middlename, u.alternatename
-                        FROM {user}              u
-                        JOIN {user_enrolments}   ue  ON ue.userid    = u.id
-                                                     AND ue.status    = :activeue
-                        JOIN {enrol}             e   ON e.id         = ue.enrolid
-                                                     AND e.courseid   = :courseid_sub
-                                                     AND e.status     = :activee
-                        JOIN {user_info_field}   uif ON uif.shortname = :fieldshortname
-                        JOIN {user_info_data}    uid ON uid.fieldid   = uif.id
-                                                     AND uid.userid    = u.id
-                       WHERE u.deleted = 0
-                         AND " . $DB->sql_like('uid.data', ':filtervalue_sub', false) . "
-                    ORDER BY u.lastname ASC, u.firstname ASC";
+        $from = "FROM {user} u
+                 JOIN {user_info_field} uif ON uif.shortname = :shortname
+                 JOIN {user_info_data} uid ON uid.fieldid = uif.id AND uid.userid = u.id
+                 $groupjoin
+                WHERE u.deleted = 0
+                  AND " . $DB->sql_like('uid.data', ':value', false, false) . "
+                  AND EXISTS (
+                      SELECT 1
+                        FROM {user_enrolments} ue
+                        JOIN {enrol} e ON e.id = ue.enrolid
+                       WHERE ue.userid = u.id
+                         AND e.courseid = :courseid
+                         AND e.status = :activee
+                         AND ue.status = :activeue
+                         AND ue.timestart <= :now1
+                         AND (ue.timeend = 0 OR ue.timeend > :now2)
+                  )";
 
-        $users = array_values(
-            $DB->get_records_sql($selectsql, $baseparams, $page * $perpage, $perpage)
-        );
+        $total = (int)$DB->count_records_sql("SELECT COUNT(DISTINCT u.id) $from", $params);
+        if ($total === 0) {
+            return $empty;
+        }
 
-        return ['total' => $total, 'users' => $users];
+        $userfields = fields::for_name()->including(...$identityfields)->get_sql('u', false, '', '', false);
+        $sql = "SELECT DISTINCT u.id, {$userfields->selects} $from ORDER BY u.lastname, u.firstname, u.id";
+        $users = array_values($DB->get_records_sql($sql, $params + $userfields->params, $page * $perpage, $perpage));
+
+        return ['total' => $total, 'users' => $users, 'identityfields' => $identityfields];
     }
 }

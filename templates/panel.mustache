@@ -1,0 +1,117 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template tool_participantscustomfilter/panel
+
+    Custom profile field filter and its results, shown on the course participants page.
+
+    Context variables required for this template:
+    * courseid - Course id.
+    * actionurl - URL the form is sent to.
+    * clearurl - URL that clears the filter.
+    * fields - Profile fields the user may filter by: [{shortname, name, selected}].
+    * hasfields - Whether there is at least one field.
+    * currentvalue - Value being looked for.
+    * isfiltered - Whether a filter is active.
+    * invalidfield - Whether the requested field cannot be used.
+    * results - Null, or {total, hasusers, headers: [{label}], users: [{fullname, profileurl, identity: [{value}]}], pagingbar}.
+
+    Example context (json):
+    {
+        "courseid": 2,
+        "actionurl": "https://example.com/user/index.php?id=2",
+        "clearurl": "https://example.com/user/index.php?id=2",
+        "fields": [{"shortname": "city", "name": "Home town", "selected": true}],
+        "hasfields": true,
+        "currentvalue": "Natal",
+        "isfiltered": true,
+        "invalidfield": false,
+        "results": {
+            "total": 1,
+            "hasusers": true,
+            "headers": [{"label": "Email address"}],
+            "users": [{"fullname": "Ana Souza", "profileurl": "https://example.com/user/view.php?id=3&course=2",
+                "identity": [{"value": "ana@example.com"}]}],
+            "pagingbar": ""
+        }
+    }
+}}
+<div class="tool-participantscustomfilter card mb-3" data-region="tool-participantscustomfilter">
+    <div class="card-body">
+        <h3 class="h5 card-title">{{#str}} filterbyprofilefield, tool_participantscustomfilter {{/str}}</h3>
+        {{#hasfields}}
+        <form method="get" action="{{actionurl}}" class="tool-participantscustomfilter-form">
+            <input type="hidden" name="id" value="{{courseid}}">
+            <label class="accesshide" for="tool-participantscustomfilter-field">{{#str}} profilefield, tool_participantscustomfilter {{/str}}</label>
+            <select name="filtercustomfield" id="tool-participantscustomfilter-field" class="form-select custom-select" required>
+                <option value="">{{#str}} selectfield, tool_participantscustomfilter {{/str}}</option>
+                {{#fields}}
+                <option value="{{shortname}}"{{#selected}} selected{{/selected}}>{{name}}</option>
+                {{/fields}}
+            </select>
+            <label class="accesshide" for="tool-participantscustomfilter-value">{{#str}} value, tool_participantscustomfilter {{/str}}</label>
+            <input type="text" name="filtervalue" id="tool-participantscustomfilter-value" class="form-control"
+                value="{{currentvalue}}" placeholder="{{#str}} filtervalue, tool_participantscustomfilter {{/str}}" required>
+            <button type="submit" class="btn btn-primary">{{#str}} filter, tool_participantscustomfilter {{/str}}</button>
+            {{#isfiltered}}
+            <a href="{{clearurl}}" class="btn btn-secondary">{{#str}} clearfilter, tool_participantscustomfilter {{/str}}</a>
+            {{/isfiltered}}
+        </form>
+        {{/hasfields}}
+        {{^hasfields}}
+        <p class="text-muted mb-0">{{#str}} nocustomfields, tool_participantscustomfilter {{/str}}</p>
+        {{/hasfields}}
+
+        {{#invalidfield}}
+        <div class="alert alert-danger mt-3 mb-0" role="alert">{{#str}} invalidfield, tool_participantscustomfilter {{/str}}</div>
+        {{/invalidfield}}
+
+        {{#results}}
+        <div class="mt-3" data-region="tool-participantscustomfilter-results">
+            <h4 class="h6">{{#str}} filteredresults, tool_participantscustomfilter, {{total}} {{/str}}</h4>
+            {{#hasusers}}
+            <div class="table-responsive">
+                <table class="table table-sm table-striped mb-2">
+                    <thead>
+                        <tr>
+                            <th scope="col">{{#str}} fullnameuser, core {{/str}}</th>
+                            {{#headers}}
+                            <th scope="col">{{label}}</th>
+                            {{/headers}}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#users}}
+                        <tr>
+                            <td><a href="{{profileurl}}">{{fullname}}</a></td>
+                            {{#identity}}
+                            <td>{{value}}</td>
+                            {{/identity}}
+                        </tr>
+                        {{/users}}
+                    </tbody>
+                </table>
+            </div>
+            {{{pagingbar}}}
+            {{/hasusers}}
+            {{^hasusers}}
+            <p class="text-muted mb-0">{{#str}} noresults, tool_participantscustomfilter {{/str}}</p>
+            {{/hasusers}}
+        </div>
+        {{/results}}
+    </div>
+</div>

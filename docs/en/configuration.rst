@@ -1,16 +1,20 @@
-Configuration & AMD Build
-==========================
+Configuration
+=============
 
-AMD JavaScript Compilation (Developers)
----------------------------------------
+The plugin has no settings of its own. What it shows depends on the site configuration.
 
-If you make any changes to the JavaScript source code inside `amd/src/`:
+Profile fields
+   Create the fields at *Site administration > Users > User profile fields*. The field setting
+   *Who is this field visible to?* decides who can filter by it:
 
-.. code-block:: bash
+   - *Visible to everyone*: anyone who can view the participants.
+   - *Visible to teachers*: users with ``moodle/site:viewuseridentity`` in the course.
+   - *Visible to user* and *Not visible*: only users with ``moodle/user:viewalldetails`` at site level.
 
-   cd /var/www/html
-   npm install
-   cd /var/www/html/admin/tool/participantscustomfilter/amd
-   npx grunt amd -v --force
+Identity columns
+   The result table shows the fields selected in *Site administration > Users > Permissions >
+   User policies > Show user identity*, for users with ``moodle/site:viewuseridentity``.
 
-Purge Moodle's JS cache at **Site administration > Development > Purge caches**.
+Capabilities
+   The filter appears for users with ``moodle/course:viewparticipants`` in the course. In separate
+   groups mode, users without ``moodle/site:accessallgroups`` only find members of their groups.
