@@ -8,7 +8,8 @@ The **tool_participantscustomfilter** plugin is an administration tool for Moodl
 
 | Version | Release Date | Moodle Requirement | Security Support Until |
 |---------|--------------|--------------------|------------------------|
-| 1.0.0   | 2026-03-04   | 4.5.x - 5.1.x      | TBD                    |
+| 2.0.0   | 2026-11-18   | 5.3.x              | TBD                    |
+| 1.1.0   | 2026-11-10   | 4.5.x - 5.3.x      | Until 2.0.0            |
 
 Security patches will be provided for the currently supported versions. Older versions will not receive security backports unless critical vulnerabilities are discovered.
 
@@ -134,8 +135,8 @@ All contributions follow these security principles:
 ## Dependencies
 
 This plugin has minimal dependencies:
-- Moodle core (≥ 4.5.0)
-- PHP 8.1+
+- Moodle core (≥ 5.3.0)
+- PHP 8.3+
 
 No external libraries are bundled. Security patches for Moodle itself are handled by Moodle maintainers.
 

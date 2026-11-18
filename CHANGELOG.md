@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.0 - 2026-11-18
+
+### Removed
+- Moodle 4.5 support. Requires Moodle 5.3 (`2026100500`); `supported = [503, 503]`. Sites on 4.5 should stay on 1.1.0.
+
+### Fixed
+- PHPUnit 11 deprecations ("Metadata found in doc-comment"): test classes declare `#[CoversClass]` attributes instead of `@covers` annotations.
+
+### Changed
+- CI runs on Moodle 5.3 only (PostgreSQL with PHP 8.3, MariaDB with PHP 8.4).
+
 ## 1.1.0 - 2026-11-10
 
 ### Changed

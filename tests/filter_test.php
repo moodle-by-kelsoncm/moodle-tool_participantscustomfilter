@@ -23,8 +23,8 @@ namespace tool_participantscustomfilter;
  * @category   test
  * @copyright  2026 onwards Kelson da Costa Medeiros
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \tool_participantscustomfilter\filter
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\tool_participantscustomfilter\filter::class)]
 final class filter_test extends \advanced_testcase {
     /** @var \stdClass Course. */
     private \stdClass $course;
