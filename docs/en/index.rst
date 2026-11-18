@@ -5,6 +5,11 @@ Participants custom field filter
 participants page (*Course > Participants*, ``/user/index.php``). Pick a profile field, type part
 of the value and the plugin lists the participants of the course whose field contains it.
 
+.. figure:: img/participants-filter.png
+   :alt: Filter by profile field panel below the standard participants filter
+
+   The panel below the standard filters, filtering by the *Campus* field.
+
 Main features
 -------------
 

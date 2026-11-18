@@ -5,6 +5,11 @@ O **tool_participantscustomfilter** acrescenta um filtro por campos personalizad
 usuário à página de participantes do curso (*Curso > Participantes*, ``/user/index.php``). Escolha um
 campo do perfil, digite parte do valor e o plugin lista os participantes do curso cujo campo o contém.
 
+.. figure:: img/participants-filter.png
+   :alt: Painel de filtro por campo do perfil abaixo do filtro padrão de participantes
+
+   O painel abaixo dos filtros padrão, filtrando pelo campo *Campus*.
+
 Principais recursos
 -------------------
 
