@@ -25,8 +25,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'tool_participantscustomfilter';
-$plugin->version   = 2026111000;
-$plugin->requires  = 2024100700;
-$plugin->supported = [405, 503];
+$plugin->version   = 2026111800;
+$plugin->requires  = 2026100500;
+$plugin->supported = [503, 503];
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '1.1.0';
+$plugin->release   = '2.0.0';

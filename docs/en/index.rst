@@ -21,7 +21,7 @@ Main features
 - Paged results with a link to each participant's course profile.
 - Stores no personal data and adds no database table.
 
-Supported versions: Moodle 4.5 LTS and 5.3 LTS.
+Supported versions: Moodle 5.3 LTS.
 
 .. toctree::
    :maxdepth: 2

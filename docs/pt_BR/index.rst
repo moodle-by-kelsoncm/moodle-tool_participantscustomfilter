@@ -21,7 +21,7 @@ Principais recursos
 - Resultados paginados, com link para o perfil de cada participante no curso.
 - Não guarda dados pessoais nem cria tabela no banco.
 
-Versões suportadas: Moodle 4.5 LTS e 5.3 LTS.
+Versões suportadas: Moodle 5.3 LTS.
 
 .. toctree::
    :maxdepth: 2

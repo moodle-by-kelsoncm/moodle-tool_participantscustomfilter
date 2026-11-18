@@ -23,8 +23,8 @@ namespace tool_participantscustomfilter;
  * @category   test
  * @copyright  2026 onwards Kelson da Costa Medeiros
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \tool_participantscustomfilter\hook_callbacks
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\tool_participantscustomfilter\hook_callbacks::class)]
 final class hook_callbacks_test extends \advanced_testcase {
     /**
      * Runs the callback on a page and returns the HTML it added.
